@@ -17,9 +17,7 @@ router = APIRouter(prefix="/api/tools", tags=["tools"])
 
 
 @router.post("/{session_id}/execute", response_model=ToolExecuteResponse)
-async def execute_tool_endpoint(
-    session_id: str, body: ToolExecuteRequest
-) -> ToolExecuteResponse:
+async def execute_tool_endpoint(session_id: str, body: ToolExecuteRequest) -> ToolExecuteResponse:
     session = session_manager.get(session_id)
     if session is None:
         raise HTTPException(status_code=404, detail="Session introuvable ou expiree.")

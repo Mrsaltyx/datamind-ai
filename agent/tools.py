@@ -199,9 +199,7 @@ TOOLS_SCHEMA = [
 ]
 
 
-def _validate_column(
-    df: pd.DataFrame, col: str, expected_type: str = None
-) -> str | None:
+def _validate_column(df: pd.DataFrame, col: str, expected_type: str = None) -> str | None:
     if col not in df.columns:
         available = df.columns.tolist()
         close = [c for c in available if col.lower() in c.lower()]
@@ -276,9 +274,7 @@ def execute_tool(tool_name: str, arguments: dict, df: pd.DataFrame) -> dict:
         elif tool_name == "show_correlation":
             numeric_df = df.select_dtypes(include=[np.number])
             if numeric_df.shape[1] < 2:
-                result["text"] = (
-                    "Pas assez de colonnes numeriques pour une matrice de correlation."
-                )
+                result["text"] = "Pas assez de colonnes numeriques pour une matrice de correlation."
                 return result
             fig = create_correlation_heatmap(df)
             if fig:
@@ -286,18 +282,13 @@ def execute_tool(tool_name: str, arguments: dict, df: pd.DataFrame) -> dict:
                 top_corr = corr.unstack().sort_values(ascending=False)
                 top_corr = top_corr[top_corr < 1.0].head(5)
                 insights = "\n".join(
-                    [
-                        f"  {idx[0]} <-> {idx[1]}: {val:.3f}"
-                        for idx, val in top_corr.items()
-                    ]
+                    [f"  {idx[0]} <-> {idx[1]}: {val:.3f}" for idx, val in top_corr.items()]
                 )
                 result["text"] = f"Top correlations:\n{insights}"
                 result["figure"] = fig
                 result["success"] = True
             else:
-                result["text"] = (
-                    "Pas assez de colonnes numeriques pour une matrice de correlation."
-                )
+                result["text"] = "Pas assez de colonnes numeriques pour une matrice de correlation."
 
         elif tool_name == "detect_outliers":
             col = arguments.get("column")
@@ -359,9 +350,7 @@ def execute_tool(tool_name: str, arguments: dict, df: pd.DataFrame) -> dict:
             cat_col = arguments.get("categorical_column")
             num_col = arguments.get("numeric_column")
             if not cat_col or not num_col:
-                result["text"] = (
-                    "Parametres 'categorical_column' et 'numeric_column' requis."
-                )
+                result["text"] = "Parametres 'categorical_column' et 'numeric_column' requis."
                 return result
             err_cat = _validate_column(df, cat_col)
             err_num = _validate_column(df, num_col, "numeric")
@@ -428,9 +417,7 @@ def execute_tool(tool_name: str, arguments: dict, df: pd.DataFrame) -> dict:
             result["figure"] = create_scatter_plot(df, x_col, y_col, color_col)
             valid = df[[x_col, y_col]].dropna()
             if len(valid) < 2:
-                result["text"] = (
-                    f"Pas assez de donnees valides pour scatter {x_col} vs {y_col}."
-                )
+                result["text"] = f"Pas assez de donnees valides pour scatter {x_col} vs {y_col}."
                 result["success"] = True
                 return result
             r, p = sp_stats.pearsonr(valid[x_col], valid[y_col])
@@ -467,9 +454,7 @@ def execute_tool(tool_name: str, arguments: dict, df: pd.DataFrame) -> dict:
             report = {
                 "target": target_info,
                 "task_type": task_info,
-                "preprocessing_needs": {
-                    k: v for k, v in needs.items() if v and k != "warnings"
-                },
+                "preprocessing_needs": {k: v for k, v in needs.items() if v and k != "warnings"},
             }
             if needs.get("warnings"):
                 report["warnings"] = needs["warnings"]
@@ -484,9 +469,7 @@ def execute_tool(tool_name: str, arguments: dict, df: pd.DataFrame) -> dict:
             report = generate_ml_report(df, target_col)
 
             if not report.get("success"):
-                result["text"] = report.get(
-                    "error", "Erreur lors de la generation du rapport ML."
-                )
+                result["text"] = report.get("error", "Erreur lors de la generation du rapport ML.")
                 return result
 
             summary = report.get("summary", "")

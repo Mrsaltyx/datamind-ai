@@ -61,9 +61,7 @@ def create_correlation_heatmap(df: pd.DataFrame) -> go.Figure:
             hovertemplate="%{x} vs %{y}: %{z:.3f}<extra></extra>",
         )
     )
-    fig.update_layout(
-        template=PLOTLY_TEMPLATE, height=600, title="Matrice de corrélation"
-    )
+    fig.update_layout(template=PLOTLY_TEMPLATE, height=600, title="Matrice de corrélation")
     return fig
 
 
@@ -215,16 +213,12 @@ def create_categorical_plot(df: pd.DataFrame, column: str) -> go.Figure:
     )
 
     fig.add_trace(
-        go.Bar(
-            x=vc.index.astype(str), y=vc.values, marker_color=COLOR_PALETTE[: len(vc)]
-        ),
+        go.Bar(x=vc.index.astype(str), y=vc.values, marker_color=COLOR_PALETTE[: len(vc)]),
         row=1,
         col=1,
     )
     fig.add_trace(
-        go.Pie(
-            labels=vc.index.astype(str), values=vc.values, marker_colors=COLOR_PALETTE
-        ),
+        go.Pie(labels=vc.index.astype(str), values=vc.values, marker_colors=COLOR_PALETTE),
         row=1,
         col=2,
     )
@@ -244,8 +238,7 @@ def create_scatter_plot(
         template=PLOTLY_TEMPLATE,
         color_discrete_sequence=COLOR_PALETTE,
         opacity=0.6,
-        title=f"{x_col} vs {y_col}"
-        + (f" (coloré par {color_col})" if color_col else ""),
+        title=f"{x_col} vs {y_col}" + (f" (coloré par {color_col})" if color_col else ""),
     )
 
     valid = df[[x_col, y_col]].dropna()

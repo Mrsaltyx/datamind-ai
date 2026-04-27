@@ -204,18 +204,14 @@ def suggest_models(df: pd.DataFrame, target_col: str, task_type: str) -> list:
     n_samples = len(df)
     n_features = len([c for c in df.columns if c != target_col])
     numeric_features = len(df.select_dtypes(include=[np.number]).columns.tolist())
-    cat_features = len(
-        df.select_dtypes(include=["object", "category"]).columns.tolist()
-    )
+    cat_features = len(df.select_dtypes(include=["object", "category"]).columns.tolist())
     has_high_cardinality = any(
         df[c].nunique() > 30
         for c in df.select_dtypes(include=["object", "category"]).columns
         if c != target_col
     )
 
-    model_pool = (
-        CLASSIFICATION_MODELS if "classification" in task_type else REGRESSION_MODELS
-    )
+    model_pool = CLASSIFICATION_MODELS if "classification" in task_type else REGRESSION_MODELS
 
     scored = []
     for key, model in model_pool.items():
@@ -228,9 +224,7 @@ def suggest_models(df: pd.DataFrame, target_col: str, task_type: str) -> list:
         max_samp = model.get("max_samples")
         if max_samp and n_samples > max_samp:
             score -= 20
-            reasons.append(
-                f"Dataset trop large pour {model['name']} (>{max_samp:,} lignes)"
-            )
+            reasons.append(f"Dataset trop large pour {model['name']} (>{max_samp:,} lignes)")
 
         if n_samples < 1000:
             if model["complexity"] == "faible":
@@ -265,16 +259,9 @@ def suggest_models(df: pd.DataFrame, target_col: str, task_type: str) -> list:
                 if "gradient_boosting" in key:
                     score += 15
                     reasons.append("Gradient Boosting gere bien la haute cardinalite")
-                if (
-                    "logistic" in key
-                    or "linear" in key
-                    or "ridge" in key
-                    or "lasso" in key
-                ):
+                if "logistic" in key or "linear" in key or "ridge" in key or "lasso" in key:
                     score -= 5
-                    reasons.append(
-                        "Necessite encoding adequat pour variables categorielles"
-                    )
+                    reasons.append("Necessite encoding adequat pour variables categorielles")
 
         if numeric_features > n_features * 0.8:
             if key in ("svc", "svr"):
@@ -411,9 +398,7 @@ def generate_ml_report(df: pd.DataFrame, target_col: str = None) -> dict:
 
     needs = analyze_preprocessing_needs(df, target_col)
     models = suggest_models(df, target_col, task_type)
-    eval_strategy = suggest_evaluation_strategy(
-        task_type, len(df), df[target_col].dropna()
-    )
+    eval_strategy = suggest_evaluation_strategy(task_type, len(df), df[target_col].dropna())
     feat_suggestions = suggest_feature_engineering(df, target_col, task_type)
 
     top_models = models[:3] if models else []
@@ -426,9 +411,7 @@ def generate_ml_report(df: pd.DataFrame, target_col: str = None) -> dict:
         "recommended_models": top_models,
         "evaluation_strategy": eval_strategy,
         "feature_engineering": feat_suggestions,
-        "summary": _build_summary(
-            df, target_col, task_info, top_models, needs, eval_strategy
-        ),
+        "summary": _build_summary(df, target_col, task_info, top_models, needs, eval_strategy),
     }
 
     return report
@@ -436,14 +419,10 @@ def generate_ml_report(df: pd.DataFrame, target_col: str = None) -> dict:
 
 def _build_summary(df, target_col, task_info, top_models, needs, eval_strategy) -> str:
     lines = []
-    lines.append(
-        f"## Rapport ML - Dataset ({len(df):,} lignes x {len(df.columns)} colonnes)"
-    )
+    lines.append(f"## Rapport ML - Dataset ({len(df):,} lignes x {len(df.columns)} colonnes)")
     lines.append("")
     lines.append(f"**Cible detectee** : `{target_col}` ({task_info['dtype']})")
-    lines.append(
-        f"**Type de tache** : {task_info['task_type']} ({task_info['subtype']})"
-    )
+    lines.append(f"**Type de tache** : {task_info['task_type']} ({task_info['subtype']})")
     lines.append(f"**Nombre de classes** : {task_info['nunique']}")
     lines.append("")
 
@@ -469,13 +448,9 @@ def _build_summary(df, target_col, task_info, top_models, needs, eval_strategy) 
     if needs["scaling"]:
         pp_steps.append("Standardiser les features numeriques")
     if needs["transformation"]:
-        pp_steps.append(
-            f"Transformer {len(needs['transformation'])} colonne(s) asymetriques"
-        )
+        pp_steps.append(f"Transformer {len(needs['transformation'])} colonne(s) asymetriques")
     if needs["multicollinearity"]:
-        pp_steps.append(
-            f"Traiter {len(needs['multicollinearity'])} paire(s) de multicollinearite"
-        )
+        pp_steps.append(f"Traiter {len(needs['multicollinearity'])} paire(s) de multicollinearite")
 
     if pp_steps:
         lines.append("### Preprocessing necessaire")
@@ -485,9 +460,7 @@ def _build_summary(df, target_col, task_info, top_models, needs, eval_strategy) 
 
     lines.append("### Strategie d'evaluation")
     lines.append(f"  - **Methode** : {eval_strategy['validation']['method']}")
-    lines.append(
-        f"  - **Metriques** : {', '.join(m['name'] for m in eval_strategy['metrics'])}"
-    )
+    lines.append(f"  - **Metriques** : {', '.join(m['name'] for m in eval_strategy['metrics'])}")
     if eval_strategy.get("warnings"):
         for w in eval_strategy["warnings"]:
             lines.append(f"  - **Attention** : {w}")
