@@ -1,1 +1,1 @@
-from agent.agent import DataMindAgent
+from agent.agent import DataMindAgent as DataMindAgent

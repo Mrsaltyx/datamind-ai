@@ -1,14 +1,31 @@
+from __future__ import annotations
+
 import csv
-import pandas as pd
-import numpy as np
+import logging
 from io import StringIO
+
+import numpy as np
+import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 ENCODING_FALLBACKS = ["utf-8", "utf-8-sig", "latin-1", "cp1252", "iso-8859-1"]
 
+# Warning threshold: warn if dataset exceeds this but still load it
+LARGE_DATASET_WARNING = 100_000
 
-def load_csv(
-    uploaded_file, max_rows: int = 50000, max_size_mb: float = 200
-) -> pd.DataFrame:
+
+def load_csv(uploaded_file, max_rows: int | None = None, max_size_mb: float = 200) -> pd.DataFrame:
+    """Load a CSV file with automatic encoding and delimiter detection.
+
+    Args:
+        uploaded_file: File-like object with .getvalue() method
+        max_rows: Maximum rows to load. None means no limit (loads all rows).
+        max_size_mb: Maximum file size in MB.
+
+    Returns:
+        pandas DataFrame with the loaded data.
+    """
     raw_bytes = uploaded_file.getvalue()
 
     if len(raw_bytes) > max_size_mb * 1024 * 1024:
@@ -51,16 +68,60 @@ def load_csv(
         )
 
     if df.empty or df.shape[1] == 0:
-        raise ValueError(
-            "Le fichier CSV est vide ou ne contient aucune colonne valide."
+        raise ValueError("Le fichier CSV est vide ou ne contient aucune colonne valide.")
+
+    total_rows = len(df)
+
+    # Optimize memory usage for large datasets
+    if total_rows > 10_000:
+        df = _optimize_dtypes(df)
+
+    # Warn for large datasets instead of silently sampling
+    if total_rows > LARGE_DATASET_WARNING:
+        logger.warning(
+            "Dataset volumineux : %d lignes chargees. L'analyse peut etre plus lente.",
+            total_rows,
         )
 
-    if len(df) > max_rows:
-        print(
-            f"Dataset trop volumineux ({len(df):,} lignes). Echantillonnage a {max_rows:,} lignes."
+    # Apply max_rows limit if specified (but default is None = no limit)
+    if max_rows is not None and total_rows > max_rows:
+        logger.warning(
+            "Dataset tronque de %d a %d lignes (max_rows=%d).",
+            total_rows,
+            max_rows,
+            max_rows,
         )
-        df = df.sample(n=max_rows, random_state=42).reset_index(drop=True)
+        df = df.head(max_rows).reset_index(drop=True)
 
+    return df
+
+
+def _optimize_dtypes(df: pd.DataFrame) -> pd.DataFrame:
+    """Optimize DataFrame dtypes to reduce memory usage."""
+    for col in df.columns:
+        col_type = df[col].dtype
+        if col_type == "object":
+            num_unique = df[col].nunique()
+            if num_unique / len(df[col]) < 0.5:
+                df[col] = df[col].astype("category")
+        elif col_type in ("int64", "int32"):
+            c_min, c_max = df[col].min(), df[col].max()
+            if c_min >= 0:
+                if c_max < 255:
+                    df[col] = df[col].astype("uint8")
+                elif c_max < 65535:
+                    df[col] = df[col].astype("uint16")
+                elif c_max < 4294967295:
+                    df[col] = df[col].astype("uint32")
+            else:
+                if c_min > -128 and c_max < 127:
+                    df[col] = df[col].astype("int8")
+                elif c_min > -32768 and c_max < 32767:
+                    df[col] = df[col].astype("int16")
+                elif c_min > -2147483648 and c_max < 2147483647:
+                    df[col] = df[col].astype("int32")
+        elif col_type == "float64":
+            df[col] = df[col].astype("float32")
     return df
 
 

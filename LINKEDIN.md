@@ -1,59 +1,79 @@
-# DataMind AI - Assistant d'analyse de données propulsé par l'IA
+# DataMind AI v2 — De Streamlit à une architecture Full-Stack FastAPI + Vue 3
 
-## Le projet en quelques mots
+## Update majeure : DataMind AI passe en v2
 
-DataMind AI est un agent intelligent d'analyse de données qui permet d'explorer, visualiser et comprendre n'importe quel jeu de données en langage naturel. Chargez un CSV, posez vos questions, et l'IA s'occupe du reste.
+Après avoir construit la première version de DataMind AI avec Streamlit, j'ai décidé de faire passer le projet au niveau supérieur avec une refonte complète de l'architecture. Le résultat : une application full-stack production-ready avec FastAPI + Vue 3.
 
-## Le problème
+## Ce qui a changé
 
-L'analyse exploratoire de données (EDA) est une étape chronophage dans tout projet data science. Entre le nettoyage, les statistiques descriptives, les visualisations et la détection d'anomalies, les data analysts passent des heures sur des tâches répétitives avant même de commencer la modélisation.
+### Architecture complètement repensée
 
-## La solution
+| | v1 (Streamlit) | v2 (FastAPI + Vue 3) |
+|---|---|---|
+| Frontend | Streamlit (Python monolithique) | Vue 3 + TypeScript + Tailwind CSS |
+| Backend | Script Python unique | API REST FastAPI avec SQLAlchemy async |
+| State management | st.session_state | Pinia stores |
+| Déploiement | streamlit run | Docker (nginx + FastAPI + Ollama) |
+| CI/CD | Aucun | GitHub Actions (lint, test, build, Docker) |
+| Tests | Basiques | 62 tests pytest + type-check TypeScript |
 
-J'ai construit DataMind AI, un agent conversationnel qui automatise l'ensemble du workflow d'analyse de données :
+### Nouvelles fonctionnalités v2
 
-- **EDA automatique** : En un clic, l'agent génère un rapport complet avec statistiques descriptives, corrélations, distributions et recommandations
-- **Chat interactif** : Posez vos questions en français, l'agent sélectionne les outils pertinents et produit des visualisations Plotly
-- **Conseiller ML intégré** : Détecte automatiquement la variable cible, identifie le type de tâche (classification/régression), recommande des modèles avec hyperparamètres et stratégies d'évaluation
+- **3 providers LLM** : Modèle embarqué (GGUF local via llama.cpp), Ollama, ou API distante (OpenAI-compatible) — switchable à chaud depuis l'interface
+- **API REST complète** : 12 endpoints documentés pour l'upload, le chat, les outils d'analyse et la configuration
+- **Persistance des sessions** : SQLite async pour reprendre ses analyses
+- **Interface Vue 3** : Sidebar, chat interactif, rendu Plotly, preview tabulaire, notifications toast
+- **Déploiement Docker** : docker-compose avec Ollama + Backend + Frontend (nginx)
+- **CI/CD GitHub Actions** : ruff (lint), pytest (62 tests), vue-tsc (type-check), Docker build
 
-## Stack technique
+### Ce qui reste (et s'améliore)
+
+Les fonctionnalités clés de la v1 sont toujours là, améliorées :
+
+- **EDA automatique** : En un clic, rapport complet avec statistiques, corrélations, distributions
+- **Chat en langage naturel** : Posez vos questions en français, l'agent sélectionne les 10 outils pertinents et produit des visualisations Plotly interactives
+- **Conseiller ML intégré** : Détection automatique de la variable cible, classification/régression, modèles recommandés avec hyperparamètres
+- **Chargement CSV robuste** : Détection auto d'encodage (UTF-8, Latin-1, CP1252) et de délimiteur
+
+## Stack technique v2
 
 | Composant | Technologie |
 |---|---|
-| Interface | Streamlit |
-| Agent LLM | OpenAI API (compatible z.Ai / GPT) |
-| Analyse de données | Pandas, NumPy, SciPy |
+| Frontend | Vue 3, TypeScript, Pinia, Tailwind CSS 4 |
+| Backend | Python 3.12+, FastAPI, Pydantic v2, SQLAlchemy async |
+| Agent LLM | OpenAI API (multi-provider : GGUF / Ollama / distant) |
+| Analyse | Pandas, NumPy, SciPy |
 | Visualisation | Plotly |
-| Architecture | Function Calling (tool use) |
-| Langage | Python |
+| Base de données | SQLite (async) |
+| Déploiement | Docker, nginx |
+| CI/CD | GitHub Actions |
 
-## Architecture
+## Ce que j'ai appris avec cette v2
 
-L'application repose sur une architecture d'agent avec function calling :
+- **Architecture full-stack** : Séparation propre frontend/backend avec API REST
+- **Vue 3 Composition API** : Stores Pinia, composants réactifs, TypeScript
+- **FastAPI asynchrone** : SQLAlchemy async, lifespan, middleware CORS
+- **Multi-provider LLM** : Abstraction entre llama.cpp, Ollama et API distante
+- **DevOps** : Docker multi-stage, nginx reverse proxy, CI/CD GitHub Actions
+- **Qualité code** : ruff linting, 62 tests pytest, type-check TypeScript, coverage
 
-1. **app.py** - Interface Streamlit avec sidebar de configuration, preview des données, EDA automatique et chat
-2. **agent/agent.py** - Agent LLM avec gestion du contexte, retry logic et orchestration des outils
-3. **agent/tools.py** - 10 outils d'analyse (describe, distribution, corrélation, outliers, tendances, scatter, ML pipeline...)
-4. **utils/** - Modules de data loading, charts Plotly, preprocessing et conseil ML
-5. **prompts/** - System prompt structuré guidant le comportement de l'agent
+## Essayer DataMind AI v2
 
-## Fonctionnalités clés
+```bash
+git clone https://github.com/Mrsaltyx/datamind-ai.git
+cd datamind-ai
+docker-compose up --build
+```
 
-- Chargement de CSV avec détection automatique d'encodage et de délimiteur
-- Analyse exploratoire en un clic (describe, corrélation, distribution, catégories)
-- Chat en langage naturel avec visualisations interactives
-- Détection automatique de la cible ML et du type de tâche
-- Rapport ML complet : modèles recommandés, hyperparamètres, preprocessing, métriques d'évaluation
-- Détection de valeurs aberrantes (IQR), analyse de tendances, comparaisons de groupes
-- Interface sombre et moderne avec métriques en temps réel
+Ou en mode développement :
+```bash
+# Backend
+pip install -e ".[dev]"
+uvicorn backend.main:app --reload
 
-## Ce que j'ai appris
-
-- Conception d'agents LLM avec function calling et gestion de contexte
-- Orchestration de pipelines d'analyse de données complexes via des outils
-- Building d'interfaces Streamlit avec state management avancé
-- Visualisation de données interactives avec Plotly
-- Stratégies de retry et gestion d'erreurs pour API LLM
+# Frontend
+cd frontend && npm install && npm run dev
+```
 
 ## Liens
 
@@ -61,4 +81,4 @@ L'application repose sur une architecture d'agent avec function calling :
 
 ## Tags
 
-`#DataScience` `#IA` `#LLM` `#Python` `#Streamlit` `#DataAnalysis` `#MachineLearning` `#AgentIA` `#OpenAI` `#Plotly` `#EDA` `#FunctionCalling`
+`#DataScience` `#IA` `#LLM` `#Python` `#VueJS` `#FastAPI` `#TypeScript` `#DataAnalysis` `#MachineLearning` `#AgentIA` `#Docker` `#Plotly` `#EDA` `#FullStack` `#OpenSource`

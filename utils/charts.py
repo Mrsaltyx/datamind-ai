@@ -1,8 +1,8 @@
+import numpy as np
+import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-import pandas as pd
-import numpy as np
 from scipy import stats as scipy_stats
 
 PLOTLY_TEMPLATE = "plotly_dark"
@@ -143,7 +143,7 @@ def create_trend_plot(df: pd.DataFrame, date_col: str, value_col: str) -> go.Fig
             x=rolling.index,
             y=rolling.values,
             mode="lines",
-            name=f"Moyenne mobile (7 périodes)",
+            name="Moyenne mobile (7 périodes)",
             line=dict(color=COLOR_PALETTE[1], width=2, dash="dash"),
         )
     )
@@ -164,7 +164,7 @@ def create_group_comparison(df: pd.DataFrame, cat_col: str, num_col: str) -> go.
         cols=2,
         subplot_titles=(
             f"Moyenne de {num_col} par {cat_col}",
-            f"Distribution par groupe",
+            "Distribution par groupe",
         ),
         column_widths=[0.5, 0.5],
     )
