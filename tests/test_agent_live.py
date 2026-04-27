@@ -1,6 +1,6 @@
+# ruff: noqa: E402
 import os
 import sys
-import json
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import pandas as pd
+
 from agent.agent import DataMindAgent
 
 df = pd.read_csv("train.csv", nrows=100)

@@ -1,5 +1,6 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
+
 from utils.data_loader import get_data_summary
 
 TARGET_KEYWORDS = [
@@ -30,13 +31,11 @@ def detect_target_column(df: pd.DataFrame) -> dict:
     for col in df.columns:
         col_lower = col.lower().strip()
         best_score = 0
-        best_priority = 0
         for kw, priority in TARGET_KEYWORDS:
             if kw in col_lower:
                 match_score = priority * (len(kw) / max(len(col_lower), 1))
                 if match_score > best_score:
                     best_score = match_score
-                    best_priority = priority
         if best_score > 0:
             candidates.append((col, round(best_score, 3), "keyword"))
 
@@ -52,8 +51,7 @@ def detect_target_column(df: pd.DataFrame) -> dict:
         "confidence": round(candidates[0][1], 2),
         "method": candidates[0][2],
         "all_candidates": [
-            {"column": c, "confidence": round(s, 2), "method": m}
-            for c, s, m in candidates[:5]
+            {"column": c, "confidence": round(s, 2), "method": m} for c, s, m in candidates[:5]
         ],
     }
 
@@ -79,9 +77,7 @@ def detect_task_type(df: pd.DataFrame, target_col: str) -> dict:
         else:
             task = "regression"
             subtype = "continuous_numeric"
-    elif pd.api.types.is_object_dtype(series) or pd.api.types.is_categorical_dtype(
-        series
-    ):
+    elif pd.api.types.is_object_dtype(series) or isinstance(series.dtype, pd.CategoricalDtype):
         if nunique == 2:
             task = "binary_classification"
             subtype = "categorical_binary"
@@ -151,9 +147,7 @@ def analyze_preprocessing_needs(df: pd.DataFrame, target_col: str = None) -> dic
         if col == target_col:
             continue
 
-        if pd.api.types.is_object_dtype(df[col]) or pd.api.types.is_categorical_dtype(
-            df[col]
-        ):
+        if pd.api.types.is_object_dtype(df[col]) or isinstance(df[col].dtype, pd.CategoricalDtype):
             nunique = df[col].nunique()
             if nunique <= 10:
                 enc_type = "one-hot encoding"
@@ -238,9 +232,7 @@ def analyze_preprocessing_needs(df: pd.DataFrame, target_col: str = None) -> dic
     return needs
 
 
-def suggest_feature_engineering(
-    df: pd.DataFrame, target_col: str, task_type: str
-) -> list:
+def suggest_feature_engineering(df: pd.DataFrame, target_col: str, task_type: str) -> list:
     suggestions = []
 
     datetime_cols = []
@@ -269,9 +261,7 @@ def suggest_feature_engineering(
         if pd.api.types.is_numeric_dtype(target_series):
             pass
 
-    numeric_cols = [
-        c for c in df.select_dtypes(include=[np.number]).columns if c != target_col
-    ]
+    numeric_cols = [c for c in df.select_dtypes(include=[np.number]).columns if c != target_col]
     if len(numeric_cols) >= 2 and len(numeric_cols) <= 20:
         suggestions.append(
             {

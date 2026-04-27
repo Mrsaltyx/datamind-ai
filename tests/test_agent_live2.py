@@ -1,6 +1,6 @@
+# ruff: noqa: E402
 import os
 import sys
-import json
 
 sys.stdout.reconfigure(encoding="utf-8")
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import pandas as pd
+
 from agent.agent import DataMindAgent
 
 df = pd.read_csv("train.csv", nrows=500)
@@ -17,7 +18,7 @@ print(f"Dataset: {df.shape}")
 
 agent = DataMindAgent()
 agent.set_data(df)
-print(f"Agent initialised")
+print("Agent initialised")
 print(f"Client base_url: {agent.client.base_url}")
 print(f"Model: {agent.model}")
 

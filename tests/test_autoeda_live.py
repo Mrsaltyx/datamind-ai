@@ -1,4 +1,7 @@
-import os, sys, time
+# ruff: noqa: E402
+import os
+import sys
+import time
 
 sys.stdout.reconfigure(encoding="utf-8")
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -7,6 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import pandas as pd
+
 from agent.agent import DataMindAgent
 
 df = pd.read_csv("train.csv")

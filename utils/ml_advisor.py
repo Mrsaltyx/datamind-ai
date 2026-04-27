@@ -1,12 +1,12 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
+
 from utils.preprocessing import (
+    analyze_preprocessing_needs,
     detect_target_column,
     detect_task_type,
-    analyze_preprocessing_needs,
     suggest_feature_engineering,
 )
-
 
 CLASSIFICATION_MODELS = {
     "logistic_regression": {

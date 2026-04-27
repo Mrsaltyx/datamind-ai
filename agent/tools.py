@@ -1,17 +1,19 @@
 import json
-import pandas as pd
+
 import numpy as np
+import pandas as pd
 from scipy import stats as sp_stats
-from utils.data_loader import get_column_stats, get_sample_data, get_data_summary
+
 from utils.charts import (
-    create_distribution_plot,
-    create_correlation_heatmap,
-    create_outlier_plot,
-    create_trend_plot,
-    create_group_comparison,
     create_categorical_plot,
+    create_correlation_heatmap,
+    create_distribution_plot,
+    create_group_comparison,
+    create_outlier_plot,
     create_scatter_plot,
+    create_trend_plot,
 )
+from utils.data_loader import get_column_stats, get_data_summary, get_sample_data
 
 TOOLS_SCHEMA = [
     {
@@ -439,9 +441,9 @@ def execute_tool(tool_name: str, arguments: dict, df: pd.DataFrame) -> dict:
 
         elif tool_name == "detect_target_and_task":
             from utils.preprocessing import (
+                analyze_preprocessing_needs,
                 detect_target_column,
                 detect_task_type,
-                analyze_preprocessing_needs,
             )
 
             target_col = arguments.get("target_column")
