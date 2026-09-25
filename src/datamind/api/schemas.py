@@ -82,4 +82,27 @@ class LlmStatusResponse(BaseModel):
     model: str
     base_url: str
     available: bool
+    degraded: bool
     message: str
+
+
+# --- Entrainement ML ---
+
+
+class MetricResult(BaseModel):
+    name: str
+    mean: float
+    std: float
+
+
+class TrainResponse(BaseModel):
+    success: bool
+    task_type: str = ""
+    model_name: str = ""
+    target_column: str = ""
+    n_samples: int = 0
+    n_features: int = 0
+    n_folds: int = 0
+    metrics: list[MetricResult] = []
+    warnings: list[str] = []
+    text: str = ""

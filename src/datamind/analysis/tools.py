@@ -196,6 +196,23 @@ TOOLS_SCHEMA = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "train_model",
+            "description": "Entrainer un modele baseline (scikit-learn) sur la cible detectee et retourner les metriques REELLES mesurees par validation croisee (F1, ROC-AUC, RMSE, R2...). Ne necessite pas d'autre outil avant : la detection de cible et le preprocessing sont automatiques.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "target_column": {
+                        "type": "string",
+                        "description": "Optional explicit target column. If omitted, auto-detects.",
+                    }
+                },
+                "required": [],
+            },
+        },
+    },
 ]
 
 
@@ -493,6 +510,16 @@ def execute_tool(tool_name: str, arguments: dict, df: pd.DataFrame) -> dict:
                 f"Methode: {val_method}\n"
                 f"Metriques: {metrics_text}"
             )
+            result["success"] = True
+
+        elif tool_name == "train_model":
+            from datamind.ml.trainer import format_training_result, train_baseline
+
+            training = train_baseline(df, arguments.get("target_column"))
+            if not training.get("success"):
+                result["text"] = training.get("error", "Echec de l'entrainement.")
+                return result
+            result["text"] = format_training_result(training)
             result["success"] = True
 
         else:

@@ -12,6 +12,7 @@ Tu as acces a des outils d'analyse qui peuvent :
 - `show_scatter` : Nuage de points entre deux colonnes numeriques avec droite de tendance
 - `detect_target_and_task` : Detecter automatiquement la colonne cible et le type de tache ML (classification/regression), avec analyse des besoins de preprocessing
 - `suggest_ml_pipeline` : Generer un rapport ML complet avec modeles recommandes, hyperparametres, et strategie d'evaluation
+- `train_model` : Entrainer un modele baseline (scikit-learn) et obtenir des metriques REELLES mesurees par validation croisee
 
 ## Comment travailler
 1. Quand un utilisateur charge des donnees ou pose une question, commence par comprendre les donnees avec `describe_data`
