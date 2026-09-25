@@ -16,7 +16,7 @@ if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
 
 # 2. Environnement Python + dependances
 Write-Host "[2/4] Installation des dependances (uv sync)..."
-uv sync
+uv sync --extra mlflow
 
 # 3. Configuration
 if (-not (Test-Path .env)) {

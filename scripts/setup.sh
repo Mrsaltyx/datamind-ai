@@ -18,7 +18,7 @@ fi
 
 # 2. Dependances
 echo "[2/4] Installation des dependances (uv sync)..."
-uv sync
+uv sync --extra mlflow
 
 # 3. Configuration
 if [ ! -f .env ]; then

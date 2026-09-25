@@ -12,6 +12,7 @@ from fastapi.staticfiles import StaticFiles
 
 from datamind import __version__
 from datamind.api.routers import chat, config, data, ml, tools
+from datamind.core import metrics
 from datamind.core.bootstrap import refresh_status
 from datamind.core.config import get_settings
 from datamind.core.sessions import session_manager
@@ -80,6 +81,12 @@ async def health_check() -> dict:
         "llm": (current_status.active if current_status else "unknown"),
         "llm_message": (current_status.message if current_status else ""),
     }
+
+
+@app.get("/api/metrics")
+async def metrics_endpoint() -> dict:
+    """Tokens LLM consommes (pour arbitrer les optimisations de contexte)."""
+    return metrics.store.snapshot()
 
 
 # Le backend sert le frontend buildé s'il est présent (setup utilisateur final).

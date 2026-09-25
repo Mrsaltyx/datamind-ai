@@ -198,8 +198,12 @@ def train_baseline(df: pd.DataFrame, target_column: str | None = None) -> dict:
             }
         )
 
+    # Refit sur tout le dataset : c'est cet artefact qui est logge/exporte
+    fitted_pipeline = pipeline.fit(features, y)
+
     return {
         "success": True,
+        "pipeline": fitted_pipeline,
         "task_type": task_type,
         "model_name": _MODEL_NAMES.get(task_type, "baseline"),
         "target_column": target_column,

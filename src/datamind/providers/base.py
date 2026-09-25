@@ -30,6 +30,8 @@ class ToolCall:
 class ChatResult:
     content: str | None = None
     tool_calls: list[ToolCall] = field(default_factory=list)
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
 
 
 class OpenAICompatibleProvider:
@@ -114,7 +116,13 @@ class OpenAICompatibleProvider:
             ToolCall(id=tc.id, name=tc.function.name, arguments=tc.function.arguments or "{}")
             for tc in (message.tool_calls or [])
         ]
-        return ChatResult(content=message.content, tool_calls=tool_calls)
+        usage = getattr(response, "usage", None)
+        return ChatResult(
+            content=message.content,
+            tool_calls=tool_calls,
+            prompt_tokens=getattr(usage, "prompt_tokens", 0) or 0,
+            completion_tokens=getattr(usage, "completion_tokens", 0) or 0,
+        )
 
 
 class OllamaProvider(OpenAICompatibleProvider):

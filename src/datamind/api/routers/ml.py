@@ -9,6 +9,7 @@ from fastapi import APIRouter, HTTPException
 from datamind.analysis.tools import execute_tool
 from datamind.api.schemas import MlResponse, TrainResponse
 from datamind.core.sessions import session_manager
+from datamind.ml.tracker import log_training
 from datamind.ml.trainer import format_training_result, train_baseline
 
 router = APIRouter(prefix="/api/ml", tags=["ml"])
@@ -52,6 +53,9 @@ async def train(session_id: str, target_column: str | None = None) -> TrainRespo
 
     result = await asyncio.to_thread(train_baseline, session.df, target_column)
 
+    text = format_training_result(result)
+    tracking = log_training(result, pipeline=result.get("pipeline"), report_text=text)
+
     metrics = [
         {"name": m["name"], "mean": m["mean"], "std": m["std"]} for m in result.get("metrics", [])
     ]
@@ -65,5 +69,7 @@ async def train(session_id: str, target_column: str | None = None) -> TrainRespo
         n_folds=result.get("n_folds", 0),
         metrics=metrics,
         warnings=result.get("warnings", []),
-        text=format_training_result(result),
+        text=text,
+        tracked=tracking.get("tracked", False),
+        mlflow_run_id=tracking.get("run_id", ""),
     )

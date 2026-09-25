@@ -28,6 +28,18 @@
 4. Setup universel : `setup.ps1/sh`, CI release avec `dist/`, README
 5. Qualité finale : gates verts (ruff/pytest/vue-tsc), smoke scripts, mémoire skill
 
+## Addendum post-review (MLflow)
+
+- Tracking MLflow **optionnel** (extra `[mlflow]`, installé par défaut via setup) :
+  params + métriques CV ± std + pipeline sklearn + rapport, backend SQLite local
+  (`sqlite:///./data/mlflow.db`), kill-switch `DATAMIND_TRACKING=off`, jamais bloquant.
+- Positionnement : DataMind ne concurrence pas MLflow (tracking/registry infra) ;
+  il se place au-dessus (UX conversationnelle, zero-code). Arbitrage de pertinence
+  reporté à une future version, sur données réelles.
+- **Instrumentation tokens** dès v3 : `/api/metrics` + `data/token_metrics.jsonl`
+  (usage OpenAI par requête). Critère d'arbitrage futur : −30 % de tokens sur le
+  scénario « entraînement + comparaison » via outils adossés au tracking.
+
 ## Métrique de succès
 
 Setup utilisateur final : **une commande, < 5 min, zéro prérequis exotique**. Suite de tests 100 % verte.

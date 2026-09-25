@@ -22,6 +22,8 @@ C'est tout. Ouvrez <http://localhost:8000>.
 - **EDA automatique** : statistiques descriptives, corrélations, distributions, outliers — en un clic, sans LLM.
 - **Chat en langage naturel** : l'agent LLM sélectionne 11 outils d'analyse et produit des visualisations Plotly.
 - **ML réel** : `POST /api/ml/{session_id}/train` entraîne une baseline scikit-learn (Logistic Regression / Ridge) et retourne des métriques mesurées par validation croisée — F1, ROC-AUC, RMSE, R² ± écart-type. L'outil `train_model` permet aussi à l'agent de lancer l'entraînement dans la conversation.
+- **Tracking MLflow optionnel** (extra `datamind-ai[mlflow]`) : chaque entraînement logge un run (params, métriques CV, pipeline, rapport) dans un backend SQLite local. `uv sync` nu reste léger ; les scripts de setup installent l'extra par défaut.
+- **Métriques de tokens LLM** : `GET /api/metrics` expose les tokens consommés par requête (persistés dans `data/token_metrics.jsonl`) — pour mesurer l'apport réel des optimisations de contexte au fil des versions.
 - **Deux providers LLM** : local via [Ollama](https://ollama.com) (défaut, `gemma4:e4b`) ou API distante compatible OpenAI — basculez depuis la sidebar ou `.env`.
 - **Sessions persistées** (SQLite asynchrone) et déploiement Docker.
 
@@ -71,6 +73,7 @@ POST /api/chat/{session_id}/auto-eda  # EDA automatique (LLM requis)
 POST /api/ml/{session_id}/train       # Entraine une baseline (aucun LLM requis)
 POST /api/ml/{session_id}/suggest     # Rapport de recommandation ML
 GET  /api/config/llm-status           # Etat du provider
+GET  /api/metrics                     # Tokens LLM consommes (session courante)
 GET  /api/health                      # Health check
 GET  /docs                            # Swagger UI
 ```

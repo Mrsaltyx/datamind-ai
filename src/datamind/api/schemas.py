@@ -106,3 +106,5 @@ class TrainResponse(BaseModel):
     metrics: list[MetricResult] = []
     warnings: list[str] = []
     text: str = ""
+    tracked: bool = False
+    mlflow_run_id: str = ""

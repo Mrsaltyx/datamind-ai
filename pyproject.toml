@@ -32,6 +32,9 @@ dev = [
     "pytest-cov>=5.0.0",
     "ruff>=0.8.0",
 ]
+mlflow = [
+    "mlflow>=2.20",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/datamind"]

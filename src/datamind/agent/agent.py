@@ -10,6 +10,7 @@ import pandas as pd
 
 from datamind.agent.prompts import SYSTEM_PROMPT
 from datamind.analysis.tools import TOOLS_SCHEMA, execute_tool
+from datamind.core import metrics
 from datamind.providers import LLMError, OpenAICompatibleProvider
 
 logger = logging.getLogger(__name__)
@@ -72,6 +73,7 @@ class DataMindAgent:
         figures: list = []
         for _ in range(MAX_TOOL_ITERATIONS):
             result = self._call_llm()
+            metrics.store.record(result.prompt_tokens, result.completion_tokens)
 
             assistant_msg: dict = {"role": "assistant", "content": result.content or ""}
             if result.tool_calls:
