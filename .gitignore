@@ -21,3 +21,6 @@ data/
 models/*.gguf
 
 LINKEDIN.md
+mlartifacts/
+mlruns/
+data-test/

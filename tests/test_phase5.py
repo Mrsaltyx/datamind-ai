@@ -2,8 +2,8 @@
 
 import pytest
 
-from agent.agent import DataMindAgent
-from agent.tools import TOOLS_SCHEMA, execute_tool
+from datamind.agent.agent import DataMindAgent
+from datamind.analysis.tools import TOOLS_SCHEMA, execute_tool
 
 # --- Tools schema ---
 
@@ -12,7 +12,8 @@ def test_tools_schema_contains_new_tools():
     tool_names = [t["function"]["name"] for t in TOOLS_SCHEMA]
     assert "detect_target_and_task" in tool_names
     assert "suggest_ml_pipeline" in tool_names
-    assert len(tool_names) == 10
+    assert "train_model" in tool_names
+    assert len(tool_names) == 11
 
 
 # --- detect_target_and_task ---

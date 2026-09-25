@@ -1,7 +1,6 @@
 """Phase 3: Preprocessing module — target detection, task type, feature engineering."""
 
-
-from utils.preprocessing import (
+from datamind.analysis.preprocessing import (
     analyze_preprocessing_needs,
     detect_target_column,
     detect_task_type,

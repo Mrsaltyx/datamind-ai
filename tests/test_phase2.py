@@ -4,9 +4,9 @@ import io
 
 import pytest
 
-from agent.agent import DataMindAgent
-from agent.tools import execute_tool
-from utils.data_loader import load_csv as loader_load
+from datamind.agent.agent import DataMindAgent
+from datamind.analysis.data_loader import load_csv as loader_load
+from datamind.analysis.tools import execute_tool
 
 # --- Column validation ---
 

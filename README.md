@@ -3,130 +3,97 @@
 [![CI](https://github.com/Mrsaltyx/datamind-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/Mrsaltyx/datamind-ai/actions)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![GitHub stars](https://img.shields.io/github/stars/Mrsaltyx/datamind-ai)](https://github.com/Mrsaltyx/datamind-ai)
 
-Assistant d'analyse de données propulsé par l'IA : chargez un CSV, posez vos questions en français, obtenez visualisations interactives, statistiques et recommandations Machine Learning.
+Assistant d'analyse de données propulsé par l'IA : chargez un CSV, discutez avec vos données en français, obtenez visualisations interactives, statistiques — et **entraînez de vrais modèles ML** en un clic.
+
+## Démarrage en une commande
+
+**Windows** — `powershell -ExecutionPolicy Bypass -File scripts/setup.ps1` puis `scripts\run.ps1`
+
+**Linux/macOS** — `bash scripts/setup.sh` puis `bash scripts/run.sh`
+
+C'est tout. Ouvrez <http://localhost:8000>.
+
+- Prérequis : seulement **Python 3.12+** (uv s'installe tout seul). Node.js est optionnel (le frontend pré-buildé peut être téléchargé depuis les [releases](https://github.com/Mrsaltyx/datamind-ai/releases)).
+- Sans LLM configuré, l'app fonctionne quand même : EDA, visualisations et entraînement ML. Le chat IA s'active dès qu'un provider est disponible.
 
 ## Ce que fait le projet
 
-- Automatise l'analyse exploratoire (EDA) : statistiques descriptives, corrélations, distributions, variables catégorielles — en un clic.
-- Propose un chat en langage naturel : l'agent LLM sélectionne les outils pertinents et produit des visualisations Plotly.
-- Fournit 10 outils d'analyse : describe, distribution, corrélation, outliers (IQR), tendances temporelles, comparaison de groupes, catégories, scatter, détection de cible ML, pipeline ML complet.
-- Conseille sur le ML : détection automatique de la variable cible et du type de tâche (classification / régression), modèles recommandés avec hyperparamètres, preprocessing et métriques.
-- Supporte 3 fournisseurs LLM : modèle embarqué (GGUF local), Ollama, ou API distante compatible OpenAI.
-- Persiste les sessions (SQLite asynchrone) et se déploie via Docker / docker-compose.
+- **EDA automatique** : statistiques descriptives, corrélations, distributions, outliers — en un clic, sans LLM.
+- **Chat en langage naturel** : l'agent LLM sélectionne 11 outils d'analyse et produit des visualisations Plotly.
+- **ML réel** : `POST /api/ml/{session_id}/train` entraîne une baseline scikit-learn (Logistic Regression / Ridge) et retourne des métriques mesurées par validation croisée — F1, ROC-AUC, RMSE, R² ± écart-type. L'outil `train_model` permet aussi à l'agent de lancer l'entraînement dans la conversation.
+- **Tracking MLflow optionnel** (extra `datamind-ai[mlflow]`) : chaque entraînement logge un run (params, métriques CV, pipeline, rapport) dans un backend SQLite local. `uv sync` nu reste léger ; les scripts de setup installent l'extra par défaut.
+- **Métriques de tokens LLM** : `GET /api/metrics` expose les tokens consommés par requête (persistés dans `data/token_metrics.jsonl`) — pour mesurer l'apport réel des optimisations de contexte au fil des versions.
+- **Deux providers LLM** : local via [Ollama](https://ollama.com) (défaut, `gemma4:e4b`) ou API distante compatible OpenAI — basculez depuis la sidebar ou `.env`.
+- **Sessions persistées** (SQLite asynchrone) et déploiement Docker.
 
 ## Stack technique
 
 | Composant | Technologie |
 |---|---|
-| Frontend | Vue 3 (Composition API), TypeScript, Pinia, Vue Router, Tailwind CSS 4 |
-| Backend | Python 3.12+, FastAPI, Pydantic v2 |
-| Base de données | SQLite async (SQLAlchemy + aiosqlite) |
-| Agent LLM | API compatible OpenAI (Ollama / GGUF embarqué / distant) |
-| Data | Pandas, NumPy, SciPy, Plotly |
-| Build | Vite 6, vue-tsc |
-| Conteneurisation | Docker, docker-compose |
-| CI/CD | GitHub Actions (ruff, pytest, vue-tsc, docker build) |
+| Frontend | Vue 3, TypeScript, Pinia, Tailwind CSS 4 — **servi par le backend** |
+| Backend | Python 3.12+, FastAPI, Pydantic v2, package `src/datamind/` |
+| LLM | API compatible OpenAI (Ollama local / distant) |
+| ML | scikit-learn (baselines mesurées en CV) |
+| Data | Pandas 2/3, NumPy, SciPy, Plotly |
+| Tooling | uv (lockfile), ruff, pytest, GitHub Actions |
 
-## Prérequis
+## Architecture
 
-- Python 3.12 ou plus récent
-- Node.js 20 ou plus récent
-- Ollama (optionnel, pour le mode LLM local) : [ollama.com](https://ollama.com)
-
-## Installation
-
-```bash
-git clone https://github.com/Mrsaltyx/datamind-ai.git
-cd datamind-ai
-
-cp .env.example .env
-# Éditer .env selon le provider LLM choisi
-
-# Backend
-pip install -e ".[dev]"
-uvicorn backend.main:app --reload --port 8000
-
-# Frontend (dans un autre terminal)
-cd frontend
-npm install
-npm run dev
+```text
+src/datamind/
+  api/        # FastAPI : routers, schemas ; sert aussi le frontend buildé
+  agent/      # boucle agent tool-calling (prompt system inclus)
+  providers/  # abstraction LLM : OllamaProvider / RemoteProvider
+  analysis/   # 11 outils d'analyse, EDA, preprocessing, advisor ML
+  ml/         # entrainement de baselines (trainer.py)
+  core/       # config, sessions SQLite, bootstrap auto-detection LLM
 ```
 
-L'application est accessible sur `http://localhost:5173`.
-
-Avec Docker :
-
-```bash
-docker-compose up --build
-```
-
-Services démarrés : frontend (`:3000`), backend API (`:8000`), Ollama (`:11434`).
+Le bootstrap détecte au démarrage ce qui est disponible (Ollama ? clé API ?) et s'adapte : **mode dégradé** = EDA + ML sans LLM, chat désactivé avec message d'aide.
 
 ## Configuration
 
-Principales variables d'environnement :
+Copiez `.env.example` vers `.env` :
 
 | Variable | Description | Défaut |
 |---|---|---|
-| `LLM_PROVIDER` | Provider LLM : `embedded`, `ollama`, `remote` | `ollama` |
-| `EMBEDDED_MODEL_PATH` | Chemin du modèle GGUF (mode embarqué) | `models/gemma-4-4b-it-Q4_K_M.gguf` |
-| `OLLAMA_BASE_URL` | URL du serveur Ollama | `http://localhost:11434/v1` |
+| `LLM_PROVIDER` | `ollama` (local) ou `remote` (API) | `ollama` |
 | `OLLAMA_MODEL` | Modèle Ollama | `gemma4:e4b` |
-| `OPENAI_API_KEY` | Clé API (mode distant) | — |
-| `OPENAI_BASE_URL` | URL de l'API distante | `https://api.z.ai/api/coding/paas/v4/` |
-| `OPENAI_MODEL` | Modèle distant | `glm-5.1` |
+| `OPENAI_API_KEY` / `OPENAI_BASE_URL` / `OPENAI_MODEL` | Provider distant | z.ai `glm-5.1` |
 
-Le provider peut aussi être changé en temps réel depuis la sidebar de l'application.
+Basculable en temps réel depuis la sidebar de l'application.
 
-## Utilisation
-
-1. Ouvrir l'application dans le navigateur.
-2. Sélectionner le provider LLM dans la sidebar (Ollama, embarqué ou distant).
-3. Charger un fichier CSV (drag & drop supporté, détection automatique encodage / délimiteur).
-4. Lancer l'EDA automatique ou discuter avec les données via le chat.
-5. Générer un rapport ML complet en un clic.
-
-Endpoints API principaux :
+## API
 
 ```text
-POST /api/data/upload                  # Upload d'un CSV
-POST /api/chat/{session_id}/send       # Message au chat
-POST /api/chat/{session_id}/auto-eda   # EDA automatique
-POST /api/ml/{session_id}/suggest      # Suggestion de pipeline ML
-GET  /api/health                       # Health check
-```
-
-## Structure du projet
-
-```text
-datamind-ai/
-  backend/      # API REST FastAPI (routers, schémas, sessions)
-  frontend/     # SPA Vue 3 (components, stores Pinia, Dockerfile nginx)
-  agent/        # Agent LLM (3 providers, tool loop) et 10 outils d'analyse
-  utils/        # Chargement CSV, graphiques Plotly, preprocessing, ML advisor
-  prompts/      # System prompt de l'agent
-  scripts/      # Téléchargement du modèle GGUF, setup Windows
-  tests/        # 62 tests pytest
-  docker-compose.yml
-  pyproject.toml
+POST /api/data/upload                 # Upload d'un CSV -> session_id
+POST /api/chat/{session_id}/send      # Message au chat (LLM requis)
+POST /api/chat/{session_id}/auto-eda  # EDA automatique (LLM requis)
+POST /api/ml/{session_id}/train       # Entraine une baseline (aucun LLM requis)
+POST /api/ml/{session_id}/suggest     # Rapport de recommandation ML
+GET  /api/config/llm-status           # Etat du provider
+GET  /api/metrics                     # Tokens LLM consommes (session courante)
+GET  /api/health                      # Health check
+GET  /docs                            # Swagger UI
 ```
 
 ## Développement
 
-Lancer les tests et les contrôles qualité :
-
 ```bash
-pytest                    # 62 tests unitaires et d'intégration
-ruff check .              # Linting backend
-cd frontend && npx vue-tsc --noEmit   # Type-check frontend
+uv sync --extra dev        # environnement complet
+uv run pytest              # 84 tests
+uv run ruff check src tests
+cd frontend && npm ci && npx vue-tsc -b --noEmit
 ```
 
-## État du projet
+Scripts manuels (appels LLM réels) : voir `scripts/manual/`.
 
-- Version 2 fonctionnelle : EDA automatique, chat, conseiller ML et déploiement Docker opérationnels.
-- CI GitHub Actions en place (lint, tests, type-check, build Docker).
+## Docker
+
+```bash
+docker compose up --build   # app + Ollama
+```
 
 ## Licence
 
