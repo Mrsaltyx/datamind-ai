@@ -1,7 +1,6 @@
 """Phase 4: ML Advisor — model suggestions, evaluation strategy, full reports."""
 
-
-from utils.ml_advisor import (
+from datamind.analysis.ml_advisor import (
     generate_ml_report,
     suggest_evaluation_strategy,
     suggest_models,

@@ -2,8 +2,8 @@
 
 import pytest
 
-from agent.agent import DataMindAgent
-from agent.tools import TOOLS_SCHEMA, execute_tool
+from datamind.agent.agent import DataMindAgent
+from datamind.analysis.tools import TOOLS_SCHEMA, execute_tool
 
 # --- Tools schema ---
 

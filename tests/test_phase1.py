@@ -2,14 +2,14 @@
 
 import numpy as np
 
-from utils.charts import (
+from datamind.analysis.charts import (
     create_categorical_plot,
     create_correlation_heatmap,
     create_distribution_plot,
     create_outlier_plot,
     create_scatter_plot,
 )
-from utils.data_loader import get_column_stats, get_data_summary
+from datamind.analysis.data_loader import get_column_stats, get_data_summary
 
 # --- Distribution plot ---
 
