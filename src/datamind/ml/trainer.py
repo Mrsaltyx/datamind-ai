@@ -18,6 +18,7 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from datamind.analysis.dtypes import is_categorical_dtype
 from datamind.analysis.preprocessing import (
     ID_KEYWORDS,
+    _name_tokens,
     detect_target_column,
     detect_task_type,
 )
@@ -100,7 +101,7 @@ def train_baseline(df: pd.DataFrame, target_column: str | None = None) -> dict:
         c
         for c in work.columns
         if c != target_column
-        and any(kw in c.lower().strip() for kw in ID_KEYWORDS)
+        and any(kw in _name_tokens(c.lower().strip()) for kw in ID_KEYWORDS)
         and work[c].nunique() / total_rows > 0.8
     ]
     if id_cols:

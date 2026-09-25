@@ -27,13 +27,27 @@ TARGET_KEYWORDS = [
 ID_KEYWORDS = ["id", "index", "uid", "uuid", "name", "identifier"]
 
 
+def _name_tokens(col_lower: str) -> list[str]:
+    """Decoupe un nom de colonne en tokens (separateurs non alphanumeriques).
+
+    Evite les faux positifs de correspondance par sous-chaine :
+    le mot-cle "y" ne doit matcher que la colonne "y", pas "type".
+    """
+    import re
+
+    return [t for t in re.split(r"[^a-z0-9]+", col_lower.lower()) if t]
+
+
 def detect_target_column(df: pd.DataFrame) -> dict:
     candidates = []
     for col in df.columns:
         col_lower = col.lower().strip()
+        tokens = _name_tokens(col_lower)
         best_score = 0
         for kw, priority in TARGET_KEYWORDS:
-            if kw in col_lower:
+            # Correspondance par token exact (ex. "disease" dans "Heart Disease",
+            # "price" dans "target_price"), jamais par sous-chaine.
+            if kw in tokens:
                 match_score = priority * (len(kw) / max(len(col_lower), 1))
                 if match_score > best_score:
                     best_score = match_score
@@ -120,7 +134,7 @@ def analyze_preprocessing_needs(df: pd.DataFrame, target_col: str = None) -> dic
         col_lower = col.lower().strip()
         missing_pct = summary["missing_pct"].get(col, 0)
 
-        if any(kw in col_lower for kw in ID_KEYWORDS) and col != target_col:
+        if any(kw in _name_tokens(col_lower) for kw in ID_KEYWORDS) and col != target_col:
             if df[col].nunique() / total_rows > 0.8:
                 needs["id_columns"].append(
                     {
