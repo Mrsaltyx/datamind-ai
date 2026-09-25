@@ -16,7 +16,9 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 WORKDIR /app
 
 # Dependances (cache layer dédié)
-COPY pyproject.toml uv.lock ./
+# README.md requis : declare dans pyproject (readme = "README.md"), hatchling
+# le demande au build du package lors du sync qui installe le projet.
+COPY pyproject.toml uv.lock README.md ./
 RUN uv sync --frozen --no-dev --no-install-project
 
 # Code + frontend buildé
