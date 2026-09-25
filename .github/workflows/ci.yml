@@ -2,9 +2,11 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, v3-dev]
   pull_request:
-    branches: [main, master]
+    branches: [main, master, v3-dev]
+  release:
+    types: [published]
 
 jobs:
   lint-backend:
@@ -12,15 +14,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Install ruff
-        run: pip install ruff
+      - name: Install dependencies
+        run: uv sync --extra dev
       - name: Ruff check
-        run: ruff check agent/ backend/ utils/ prompts/
+        run: uv run ruff check src tests
       - name: Ruff format check
-        run: ruff format --check agent/ backend/ utils/ prompts/
+        run: uv run ruff format --check src tests
 
   test-backend:
     name: Test Backend (pytest)
@@ -28,16 +33,19 @@ jobs:
     needs: lint-backend
     steps:
       - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - name: Install dependencies
-        run: pip install -e ".[dev]"
+        run: uv sync --extra dev
       - name: Run tests
-        run: pytest tests/ -v --tb=short
+        run: uv run pytest tests/ -v --tb=short
 
-  lint-frontend:
-    name: Lint Frontend (vue-tsc)
+  build-frontend:
+    name: Build Frontend
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -50,22 +58,15 @@ jobs:
       - name: Type check
         working-directory: frontend
         run: npx vue-tsc -b --noEmit
-
-  build-frontend:
-    name: Build Frontend
-    runs-on: ubuntu-latest
-    needs: lint-frontend
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-      - name: Install dependencies
-        working-directory: frontend
-        run: npm ci
       - name: Build
         working-directory: frontend
         run: npm run build
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+          retention-days: 14
 
   docker-build:
     name: Docker Build
@@ -73,7 +74,28 @@ jobs:
     needs: [test-backend, build-frontend]
     steps:
       - uses: actions/checkout@v4
-      - name: Build backend image
-        run: docker build -f backend/Dockerfile -t datamind-backend .
-      - name: Build frontend image
-        run: docker build -f frontend/Dockerfile -t datamind-frontend .
+      - name: Build all-in-one image
+        run: docker build -t datamind-ai .
+
+  # Publie le frontend pre-buildé en asset de release :
+  # les utilisateurs finaux n'ont alors pas besoin de Node.js.
+  release-frontend:
+    name: Attach frontend-dist to release
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    needs: build-frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Build
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+          cd dist && zip -r ../../frontend-dist.zip . && cd ..
+      - name: Upload release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.event.release.tag_name }}" frontend-dist.zip --clobber
